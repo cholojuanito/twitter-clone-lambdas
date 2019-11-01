@@ -16,6 +16,7 @@
         "@types/node": "^11.13.8"
     },
     "dependencies": {
-        "aws-sdk": "^2.538.0"
+        "aws-sdk": "^2.538.0",
+        "uuid": "^3.3.3"
     }
 }
