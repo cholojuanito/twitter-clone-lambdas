@@ -7,10 +7,10 @@ export const handler = async (event: FollowExistsRequest): Promise<FollowRespons
 
     let mainId = '0miJZZ9DdhQWOnRguB4MCvfe0KV2';
     let id2 = 'u_abc';
-    let id3 = 'u_def';
-    let id4 = 'u_293043';
-    let id5 = 'u_djlka192';
-    let id6 = 'u_jdaklk3u7';
+    let id3 = 'u_293043';
+    let id4 = 'u_djlka192';
+    let id5 = 'u_jdaklk3u7';
+    let id6 = 'u_aaaaaa';
     let id7 = 'u_bbbb21';
     let id8 = 'u_9938kkkk';
     let id9 = 'u_39kkdh';
