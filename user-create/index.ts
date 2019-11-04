@@ -1,7 +1,6 @@
 import UserCreateRequest from "./UserCreateRequest";
 import UserResponse from "./UserResponse";
 import User from "./User";
-import { Media, MediaType } from "./Media";
 import uuid = require("uuid");
 
 export const handler = async (event: UserCreateRequest): Promise<UserResponse> => {
@@ -10,7 +9,7 @@ export const handler = async (event: UserCreateRequest): Promise<UserResponse> =
 
     let id = 'u_' + uuid.v4()
 
-    let u = new User(id, event.alias, event.name, new Media(event.profilePicPath, MediaType.Image));
+    let u = new User('u_1233213knl21', event.alias, event.name, event.profilePic);
 
     console.log(`created user with id ${u.id}`);
 

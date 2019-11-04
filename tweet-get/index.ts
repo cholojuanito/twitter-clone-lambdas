@@ -9,13 +9,13 @@ export const handler = async (event: TweetGetRequest): Promise<TweetResponse> =>
 
     console.log('Entering tweet-get');
 
-    let h1 = new Hashtag('#abc123', ['t_adkBuOi123']);
-    let h2 = new Hashtag('#michaeljackson', ['t_adkBuOi123']);
+    let h1 = new Hashtag('#newtag', ['t_adkBuOi123']);
+    let h2 = new Hashtag('#something', ['t_adkBuOi123']);
 
     let m1 = new Mention('cholojuanito', 'cholojuanito');
 
-    let t = new Tweet('t_adkBuOi123', 'u_1234567', 
-    'Some tweet message with #abc123 and #michealjackson in it. You know @cholojuanito?',
+    let t = new Tweet('t_adkBuOi123', 'id2', 
+    'Some tweet message with #newtag and #something in it. You know @cholojuanito?',
     null, 
     [h1, h2],
     [m1],

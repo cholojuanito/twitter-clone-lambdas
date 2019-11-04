@@ -1,15 +1,20 @@
+import ExternalURL from "./ExternalURL";
+import Mention from "./Mention";
+import Hashtag from "./Hashtag";
+import { Media } from "./Media";
+
 class TweetCreateRequest {
     public authorId:string;
     public message:string;
-    public mediaPath:string;
-    public hashtags:string[];
-    public mentions:string[];
-    public urls:string[];
+    public media:Media;
+    public hashtags:Hashtag[];
+    public mentions:Mention[];
+    public urls:ExternalURL[];
 
-    constructor(id:string, message:string, picPath:string, hashtags:string[], mentions:string[], urls:string[]) {
+    constructor(id:string, message:string, media:Media, hashtags:Hashtag[], mentions:Mention[], urls:ExternalURL[]) {
         this.authorId = id;
         this.message = message;
-        this.mediaPath = picPath;
+        this.media = media;
         this.hashtags = hashtags;
         this.mentions = mentions;
         this.urls = urls;

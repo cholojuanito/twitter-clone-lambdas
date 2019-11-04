@@ -1,7 +1,7 @@
 import { Media } from "./Media";
 
 class User {
-    private id:string;
+    public id:string;
     private alias:string;
     private name:string;
     private profilePic:Media;

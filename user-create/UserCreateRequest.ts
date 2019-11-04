@@ -1,12 +1,14 @@
+import { Media } from "./Media";
+
 class UserCreateRequest {
     public name:string;
     public alias:string;
-    public profilePicPath:string;
+    public profilePic:Media;
 
-    constructor(name:string, alias:string, picPath:string) {
+    constructor(name:string, alias:string, pic:Media) {
         this.name = name;
         this.alias = alias;
-        this.profilePicPath = picPath;
+        this.profilePic = pic;
     }
 }
 

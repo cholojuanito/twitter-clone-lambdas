@@ -4,7 +4,7 @@ class User {
     public id:string;
     public alias:string;
     public name:string;
-    publicprofilePic:Media;
+    public profilePic:Media;
 
     constructor(id:string, alias:string, name:string, profilePic:Media) {
         this.id = id;
