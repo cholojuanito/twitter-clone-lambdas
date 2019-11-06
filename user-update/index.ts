@@ -13,7 +13,17 @@ export const handler = async (event: UserUpdateRequest): Promise<UserResponse> =
     if (event.action == UserUpdateAction.Replace) {
         console.log(`Finding user with id ${event.id}`);
 
-        u = new User(event.id, 'cholojuanito', 'Tanner Davis', new Media(event.value.profilePicPath, MediaType.Image));
+        if (event.value.profilePicPath != null) {
+            u = new User(event.id, 'cholojuanito', 'Tanner Davis', new Media(event.value.profilePicPath, MediaType.Image));
+        }
+        else {
+            u = new User(event.id, 'cholojuanito', 'Tanner Davis', new Media('assets/images/default_profile.png', MediaType.Image));
+
+        }
+
+        // if (event.value) {
+
+        // }
     }
     else {
         u = new User(event.id, 'cholojuanito', 'Tanner Davis', new Media('assets/images/default_profile.png', MediaType.Image));

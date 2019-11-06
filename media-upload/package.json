@@ -1,7 +1,7 @@
 {
-    "name": "twitter-clone-media-uploader-lambda",
+    "name": "twitter-clone-authorizer-lambda",
     "version": "0.0.1",
-    "description": "Media uploader lambda for the Twitter clone API",
+    "description": "An authorizer lambda for the Twitter clone API",
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,9 +13,11 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@types/node": "^11.13.8"
+        "@types/node": "^11.13.8",
+        "@types/uuid": "^3.4.6"
     },
     "dependencies": {
-        "aws-sdk": "^2.538.0"
+        "aws-sdk": "^2.538.0",
+        "uuid": "^3.3.3"
     }
 }
