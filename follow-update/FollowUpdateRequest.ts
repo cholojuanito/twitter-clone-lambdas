@@ -1,10 +1,12 @@
 class FollowUpdateRequest {
-    public id:string;
+    public followerId:string;
+    public followeeId:string;
     public action:FollowUpdateAction;
     public value:FollowUpdates;
 
-    constructor(id:string, action:string, value:FollowUpdates) {
-        this.id = id;
+    constructor(followerId:string, followeeId:string, action:string, value:FollowUpdates) {
+        this.followerId = followerId;
+        this.followeeId = followeeId;
         this.value = value;
         if (this.action == "follow") {
             this.action = FollowUpdateAction.Follow;
@@ -16,10 +18,10 @@ class FollowUpdateRequest {
 }
 
 class FollowUpdates {
-    public active:boolean;
+    public isActive:boolean;
 
     constructor(active:boolean) {
-        this.active = active;
+        this.isActive = active;
     }
 }
 
