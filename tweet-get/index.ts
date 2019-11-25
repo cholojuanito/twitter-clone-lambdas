@@ -1,27 +1,58 @@
+import { DynamoDB } from 'aws-sdk';
+import { Context } from 'aws-lambda';
 import TweetGetRequest from "./TweetGetRequest";
 import TweetResponse from "./TweetResponse";
 import Tweet from "./Tweet";
 import Hashtag from "./Hashtag";
 import Mention from "./Mention";
 import { Media, MediaType } from "./Media";
+import ExternalURL from './ExternalURL';
+import { ErrorResponse } from './ErrorResponse';
 
-export const handler = async (event: TweetGetRequest): Promise<TweetResponse> => {
+export const handler = async (event: TweetGetRequest, context:Context): Promise<TweetResponse> => {
 
     console.log('Entering tweet-get');
 
-    let h1 = new Hashtag('#newtag', ['t_adkBuOi123']);
-    let h2 = new Hashtag('#something', ['t_adkBuOi123']);
+    let docClient = new DynamoDB.DocumentClient();
 
-    let m1 = new Mention('cholojuanito', 'cholojuanito');
+    let params:DynamoDB.DocumentClient.QueryInput = {
+        TableName: 'Tweets',
+        IndexName: 'id-index',
+        KeyConditionExpression: '#uid = :uid',
+        ExpressionAttributeNames: {
+            '#uid': 'id'
+        },
+        ExpressionAttributeValues: {
+            ':uid': event.id
+        },
+        Limit: 1
+        
+        
+    };
 
-    let t = new Tweet('t_adkBuOi123', 'id2', 
-    'Some tweet message with #newtag and #something in it. You know @cholojuanito?',
-    null, 
-    [h1, h2],
-    [m1],
-    [],
-    Date.UTC(2019, 10, 25, 10, 10, 10).toString()
-    );
+    let result = await docClient.query(params, (err, data) => {
+        if (err) {
+            console.error("Unable to get user by id. Error JSON:", JSON.stringify(err));
+            let resp:ErrorResponse = new ErrorResponse(err.message, err.statusCode);
+            context.fail(JSON.stringify(resp));
+        } else {
+            console.log("Got item:", JSON.stringify(data));
+        }
+    }).promise();
+
+    let t: Tweet = null;
+    if (result.Count > 0) {
+        let data = result.Items[0];
+        let hashtags:Hashtag[] = data.hashtags.map((word:string) => new Hashtag(word, [data.id]));
+        let mentions:Mention[] = data.mentions.map((word:string) => new Mention(word, word));
+        let urls:ExternalURL[] = data.urls.map((word:string) => new ExternalURL(word));
+        t = new Tweet(data.id, data.authorId, data.message, new Media(data.media, data.mediaType), hashtags, mentions, urls, data.created);
+    }
+    else {
+        console.error("Unable to get tweet by id.");
+        // ? Error response?
+    }
+    
 
     console.log('Leaving tweet-get');
 
