@@ -46,7 +46,11 @@ export const handler = async (event: TweetGetRequest, context:Context): Promise<
         let hashtags:Hashtag[] = data.hashtags.map((word:string) => new Hashtag(word, [data.id]));
         let mentions:Mention[] = data.mentions.map((word:string) => new Mention(word, word));
         let urls:ExternalURL[] = data.urls.map((word:string) => new ExternalURL(word));
-        t = new Tweet(data.id, data.authorId, data.message, new Media(data.media, data.mediaType), hashtags, mentions, urls, data.created);
+        let media:Media = data.media;
+        if (media != null) {
+            media = new Media(data.media, data.mediaType);
+        }
+        t = new Tweet(data.id, data.authorId, data.message, media, hashtags, mentions, urls, data.created);
     }
     else {
         console.error("Unable to get tweet by id.");

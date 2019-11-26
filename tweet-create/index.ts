@@ -12,28 +12,49 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
 
     let id = 't_' + v4();
     let docClient = new DynamoDB.DocumentClient();
-    let creation:string = new Date().toISOString();
+    let date = new Date();
+    let creation:string = date.toISOString();
+    let timestamp = Math.floor(date.getTime() / 1000);
+    let media = null;
+    let mediaType = null;
+    if (event.media != null) {
+        media = event.media.path;
+        mediaType = event.media.type;
+    }
     let hashtags:string[] = event.hashtags.map((tag) =>  tag.word);
     let mentions:string[] = event.mentions.map((m) => m.alias);
     let urls:string[] = event.urls.map((u) => u.route);
 
-    let params: DynamoDB.DocumentClient.PutItemInput = {
+    let tweetParams: DynamoDB.DocumentClient.PutItemInput = {
         TableName: 'Tweets',
         Item: {
             id: id,
             authorId: event.authorId,
             message: event.message,
-            media: event.media.path,
-            mediaType: event.media.type,
+            media: media,
+            mediaType: mediaType,
             hashtags: hashtags,
             mentions: mentions,
             urls: urls,
-            created: creation
-        },
-        ConditionExpression: 'attribute_not_exists(id)'        
+            created: timestamp
+        },     
     };
 
-    let result = await docClient.put(params, (err, data) => {
+    let feedParams: DynamoDB.DocumentClient.PutItemInput = {
+        TableName: 'Feeds',
+        Item: {
+            userId: '0miJZZ9DdhQWOnRguB4MCvfe0KV2', // TODO this needs to be changed
+            created: timestamp,
+            tweetKey: {
+                'authorId': event.authorId,
+                'created': timestamp
+            }
+        }       
+    };
+
+    // TODO set up queues and params for hashtags as well
+
+    let result = await docClient.put(tweetParams, (err, data) => {
         if (err) {
             console.error("Unable to add item. Error JSON:", JSON.stringify(err));
             let resp:ErrorResponse;
@@ -45,11 +66,23 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
             }
             context.fail(JSON.stringify(resp));
         } else {
-            console.log("Added item:", JSON.stringify(data));
+            console.log("Added tweet");
         }
     }).promise();
 
-    let t:Tweet = new Tweet(id, event.authorId, event.message, event.media, event.hashtags, event.mentions, event.urls, creation);
+    // Add to the Feed table
+    // TODO put in a queue for processing
+    let feedResult = await docClient.put(feedParams, (err, data) => {
+        if (err) {
+            console.error("Unable to add item. Error JSON:", JSON.stringify(err));
+            let resp = new ErrorResponse(err.message, err.statusCode);
+            context.fail(JSON.stringify(resp));
+        } else {
+            console.log("Added tweet to feed");
+        }
+    }).promise();
+
+    let t:Tweet = new Tweet(id, event.authorId, event.message, event.media, event.hashtags, event.mentions, event.urls, timestamp.toString());
 
     console.log('Leaving tweet-create');
 
