@@ -11,7 +11,7 @@ export const handler = async (event: FollowCreateRequest, context:Context): Prom
     console.log('Entering follow-create')
 
     let id = 'f_' + v4();
-    let startDate = new Date().toISOString();
+    let startDate = Math.floor(new Date().getTime() / 1000);
     let docClient = new DynamoDB.DocumentClient();
     let params: DynamoDB.DocumentClient.PutItemInput = {
         TableName: 'Follows',
@@ -41,7 +41,7 @@ export const handler = async (event: FollowCreateRequest, context:Context): Prom
         }
     }).promise();
 
-    let f = new Follow(id, event.followerId, event.followeeId, true, startDate);
+    let f = new Follow(id, event.followerId, event.followeeId, true, startDate.toString());
 
     console.log(`created follow with id ${f.id}`);
 

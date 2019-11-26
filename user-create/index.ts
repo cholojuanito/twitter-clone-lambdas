@@ -11,7 +11,7 @@ export const handler = async (event: UserCreateRequest, context:Context): Promis
     console.log('Entering user-create')
 
     let docClient = new DynamoDB.DocumentClient();
-    let creation:string = new Date().toISOString();
+    let creation = Math.floor(new Date().getTime() / 1000);
 
     let params: DynamoDB.DocumentClient.PutItemInput = {
         TableName: 'Users',
@@ -42,7 +42,7 @@ export const handler = async (event: UserCreateRequest, context:Context): Promis
         }
     }).promise();
 
-    let u = new User(event.id, event.alias, event.name, event.profilePic, creation);
+    let u = new User(event.id, event.alias, event.name, event.profilePic, creation.toString());
 
     console.log(`created user with id ${u.id}`);
 

@@ -12,9 +12,7 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
 
     let id = 't_' + v4();
     let docClient = new DynamoDB.DocumentClient();
-    let date = new Date();
-    let creation:string = date.toISOString();
-    let timestamp = Math.floor(date.getTime() / 1000);
+    let timestamp = Math.floor(new Date().getTime() / 1000);
     let media = null;
     let mediaType = null;
     if (event.media != null) {
