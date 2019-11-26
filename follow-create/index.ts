@@ -10,6 +10,10 @@ export const handler = async (event: FollowCreateRequest, context:Context): Prom
 
     console.log('Entering follow-create')
 
+    if (event.followerId === event.followeeId) {
+        context.fail(JSON.stringify(new ErrorResponse('You cannot follow yourself', 400)));
+    }
+
     let id = 'f_' + v4();
     let startDate = Math.floor(new Date().getTime() / 1000);
     let docClient = new DynamoDB.DocumentClient();

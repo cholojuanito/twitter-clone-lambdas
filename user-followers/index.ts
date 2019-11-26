@@ -1,22 +1,89 @@
+import { DynamoDB } from 'aws-sdk';
+import { Context } from 'aws-lambda';
 import UserCollectionFollowingGetRequest from "./UserCollectionFollowGetRequest";
 import UserCollectionResponse from "./UserCollectionResponse";
 import { Media, MediaType } from "./Media";
 import User from "./User";
+import { ErrorResponse } from './ErrorResponse';
 
-export const handler = async (event: UserCollectionFollowingGetRequest): Promise<UserCollectionResponse> => {
+export const handler = async (event: UserCollectionFollowingGetRequest, context:Context): Promise<UserCollectionResponse> => {
 
     console.log('Entering followers-get')
     
     // Gets users that are currently following the asking-user
-    let u1 = new User('u_abc', 'dos-dos', 'Sr. Dos', new Media('assets/images/default_profile.png', MediaType.Image));
-    let u3 = new User('u_293043', 'user3', 'Name 3', new Media('assets/images/default_profile.png', MediaType.Image));
-    let u4 = new User('u_djlka192', 'user4', 'Name 4', new Media('https://i.imgur.com/I80W1Q0.png', MediaType.Image));
-    let u5 = new User('u_jdaklk3u7', 'user5', 'Num 5', new Media('https://i.imgur.com/I80W1Q0.png', MediaType.Image));
-    let u6 = new User('u_aaaaaa', 'user6', 'Sixes!', new Media('assets/images/default_profile.png', MediaType.Image));
-    let u7 = new User('u_bbbb21', 'user7', 'What', new Media('https://i.imgur.com/I80W1Q0.png', MediaType.Image));
+    let u:User[] = [];
+    let docClient = new DynamoDB.DocumentClient();
+    let followParams:DynamoDB.DocumentClient.QueryInput = {
+        TableName: 'Follows',
+        IndexName: 'reverse-index',
+        KeyConditionExpression: '#uid = :uid',
+        ScanIndexForward: false, // Descending order
+        ExpressionAttributeNames: {
+            '#uid': 'followeeId'
+        },
+        ExpressionAttributeValues: {
+            ':uid': event.userId
+        },
+        Limit: event.pageSize,
+    };
 
+    if (event.lastKey != null && event.lastKey !== '') {
+        followParams.ExclusiveStartKey = event.lastKey;
+    }
+
+    let followResults = await docClient.query(followParams, (err, data) => {
+        if (err) {
+            console.error("Unable to get user's followers. Error JSON:", JSON.stringify(err));
+            let resp:ErrorResponse = new ErrorResponse(err.message, err.statusCode);
+            context.fail(JSON.stringify(resp));
+        } else {
+            console.log("Got item:", JSON.stringify(data));
+        }
+    }).promise();
+    
+    let keys:DynamoDB.DocumentClient.Key[] = [];
+    if (followResults.Count > 0) {
+        for (let i = 0; i < followResults.Items.length; i++) {
+            keys.push({'alias': followResults.Items[i].followerId});
+        }
+    }
+    else {
+        return new UserCollectionResponse(u, event.pageSize, null);
+    }
+    
+    let userParams:DynamoDB.DocumentClient.BatchGetItemInput = {
+        RequestItems: {
+            'Users': {
+                'ConsistentRead': true,
+                'Keys': keys
+            }
+        },
+    };
+
+    let userResults = await docClient.batchGet(userParams, (err, data) => {
+        if (err) {
+            console.error("Unable to get users. Error JSON:", JSON.stringify(err));
+            let resp:ErrorResponse = new ErrorResponse(err.message, err.statusCode);
+            context.fail(JSON.stringify(resp));
+        } else {
+            console.log("Got item:", JSON.stringify(data));
+        }
+    }).promise();
+
+    let users = userResults.Responses['Users'];
+    if (users != null) {
+        for (let idx = 0; idx < users.length; idx++) {
+            let data = users[idx];
+            u.push(new User(data.id, data.alias, data.name, new Media(data.profilePic, MediaType.Image), data.created));
+        }
+    }
+    else {
+        console.error("Unable to get user's followers");
+        // ? Error response?
+    }
+    
     console.log('Leaving followers-get');
 
-    return new UserCollectionResponse([u1, u3, u4, u5, u6, u7], event.pageSize);
+    return new UserCollectionResponse(u, event.pageSize, followResults.LastEvaluatedKey);
 
 }
