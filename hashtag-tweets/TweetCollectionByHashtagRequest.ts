@@ -1,9 +1,9 @@
 class TweetCollectionByHashtagGetRequest {
     public hashtag:string;
     public pageSize:number;
-    public lastKey:string;
+    public lastKey:Object;
     
-    constructor (word:string, pageSize:number, lastKey:string) {
+    constructor (word:string, pageSize:number, lastKey:Object) {
         this.hashtag = word;
         this.pageSize = pageSize;
         this.lastKey = lastKey;

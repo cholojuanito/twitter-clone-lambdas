@@ -23,7 +23,7 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
     let mentions:string[] = event.mentions.map((m) => m.alias);
     let urls:string[] = event.urls.map((u) => u.route);
 
-    let tweetParams: DynamoDB.DocumentClient.PutItemInput = {
+    let tweetParams:DynamoDB.DocumentClient.PutItemInput = {
         TableName: 'Tweets',
         Item: {
             id: id,
@@ -38,7 +38,7 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
         },     
     };
 
-    let feedParams: DynamoDB.DocumentClient.PutItemInput = {
+    let feedParams:DynamoDB.DocumentClient.PutItemInput = {
         TableName: 'Feeds',
         Item: {
             userId: '0miJZZ9DdhQWOnRguB4MCvfe0KV2', // TODO this needs to be changed
@@ -49,6 +49,8 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
             }
         }       
     };
+
+    let hashtagParams:DynamoDB.DocumentClient.PutItemInput = null;
 
     // TODO set up queues and params for hashtags as well
 
@@ -79,6 +81,31 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
             console.log("Added tweet to feed");
         }
     }).promise();
+
+    for (let idx = 0; idx < hashtags.length; idx++) {
+        const element = hashtags[idx];
+        hashtagParams = {
+            TableName: 'Hashtags',
+            Item: {
+                word: element,
+                created: timestamp,
+                tweetKey: {
+                    'authorId': event.authorId,
+                    'created': timestamp
+                }
+            }
+        };
+
+        let hashtagResult = await docClient.put(hashtagParams, (err, data) => {
+            if (err) {
+                console.error("Unable to add hashtag. Error JSON:", JSON.stringify(err));
+                let resp = new ErrorResponse(err.message, err.statusCode);
+                context.fail(JSON.stringify(resp));
+            } else {
+                console.log("Added hashtag");
+            }
+        }).promise();
+    }
 
     let t:Tweet = new Tweet(id, event.authorId, event.message, event.media, event.hashtags, event.mentions, event.urls, timestamp.toString());
 

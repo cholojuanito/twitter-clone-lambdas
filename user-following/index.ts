@@ -32,7 +32,7 @@ export const handler = async (event: UserCollectionFollowingGetRequest, context:
 
     let followResults = await docClient.query(followParams, (err, data) => {
         if (err) {
-            console.error("Unable to get user's followers. Error JSON:", JSON.stringify(err));
+            console.error("Unable to get user's following. Error JSON:", JSON.stringify(err));
             let resp:ErrorResponse = new ErrorResponse(err.message, err.statusCode);
             context.fail(JSON.stringify(resp));
         } else {
@@ -77,7 +77,7 @@ export const handler = async (event: UserCollectionFollowingGetRequest, context:
         }
     }
     else {
-        console.error("Unable to get user's followers");
+        console.error("Unable to get user's following");
         // ? Error response?
     }
     

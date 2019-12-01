@@ -1,5 +1,5 @@
 import { DynamoDB } from 'aws-sdk';
-import { Context, Callback } from 'aws-lambda'
+import { Context, Callback } from 'aws-lambda';
 import UserCreateRequest from "./UserCreateRequest";
 import UserResponse from "./UserResponse";
 import User from "./User";

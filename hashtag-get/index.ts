@@ -1,43 +1,47 @@
+import { DynamoDB } from 'aws-sdk';
+import { Context } from 'aws-lambda';
 import HashtagResponse from "./HashtagResponse";
 import HashtagGetRequest from "./HashtagGetRequest";
 import Hashtag from "./Hashtag";
+import { ErrorResponse } from './ErrorResponse';
 
-export const handler = async (event: HashtagGetRequest): Promise<HashtagResponse> => {
+
+export const handler = async (event: HashtagGetRequest, context:Context): Promise<HashtagResponse> => {
 
     console.log('Entering hashtag-get');
-    let h1:string = 'hashtag';
-    let h2:string = 'nashtag';
-    let h3:string = 'federer';
-    let h4:string = 'something';
-    let h5:string = 'newtag';
-    let h6:string = 'one';
 
-    let hashtag:Hashtag = new Hashtag(event.word, []);
+    let docClient = new DynamoDB.DocumentClient();
 
-    if (event.word == h1) {
-        hashtag.tweetIds = ['t7', 't8', 't9', 't11'];
-    }
-    else if (event.word == h2) {
-        hashtag.tweetIds = ['t7', 't8', 't10', 't11', 't12'];
-    }
-    else if (event.word == h3) {
-        hashtag.tweetIds = ['t12'];
-    }
-    else if (event.word == h4) {
-        hashtag.tweetIds = ['t9'];
-    }
-    else if (event.word == h5) {
-        hashtag.tweetIds = ['t10'];
-    }
-    else if (event.word == h6) {
-        hashtag.tweetIds = ['t13'];
+    let params:DynamoDB.DocumentClient.GetItemInput = {
+        TableName: 'Hashtags',
+        Key: {
+            'word': event.word,
+        },
+    };
+
+    let result = await docClient.get(params, (err, data) => {
+        if (err || !data.Item) {
+            console.error("Unable to get hashtag. Error JSON:", JSON.stringify(err));
+            let resp:ErrorResponse = new ErrorResponse('No user with that alias was found', 400);
+            context.fail(JSON.stringify(resp));
+        } else {
+            console.log("Got item:", JSON.stringify(data));
+        }
+    }).promise();
+
+    let h:Hashtag = null;
+
+    if (result.Item) {
+        let data = result.Item;
+        h = new Hashtag(data.word, data.tweetIds);
     }
     else {
-        hashtag = null;
+        console.error("Unable to get hashtag.");
+        // ? Error response?
     }
 
     console.log('Leaving hashtag-get');
 
-    return new HashtagResponse(hashtag);
+    return new HashtagResponse(h);
 
 }

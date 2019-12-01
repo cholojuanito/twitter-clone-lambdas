@@ -1,49 +1,95 @@
+import { DynamoDB } from 'aws-sdk';
+import { Context } from 'aws-lambda';
 import { HashtagUpdateRequest, HashtagUpdateAction, HashtagUpdates } from "./HashtagUpdateRequest";
 import HashtagResponse from "./HashtagResponse";
 import Hashtag from "./Hashtag";
+import { ErrorResponse } from './ErrorResponse';
 
-export const handler = async (event: HashtagUpdateRequest): Promise<HashtagResponse> => {
+
+export const handler = async (event: HashtagUpdateRequest, context:Context): Promise<HashtagResponse> => {
 
     console.log('Entering hashtag-update');
 
-    let tag1 = 'hashtag';
-    let tag2 = 'nashtag';
     let h:Hashtag = null;
-
-    if (event.word == tag1) {
-        h = new Hashtag(tag1, ['t7', 't8', 't9', 't11']);
-    }
-    else if (event.word == tag2) {
-        h = new Hashtag(tag2, ['t7', 't8', 't10', 't11', 't12']);
-    }
-
+    let docClient = new DynamoDB.DocumentClient();
+    
     if (event.action == HashtagUpdateAction.Add) {
-        if (event.word == tag1) {
-            var index = h.tweetIds.indexOf(event.value.tweetId);
-            if (index === -1) {
-                h.tweetIds.push(event.value.tweetId);
+
+        let params:DynamoDB.DocumentClient.UpdateItemInput = {
+            TableName: 'Hashtags',
+            Key: {
+                'word': event.word
+            },
+            UpdateExpression: 'ADD #v :v',
+            ConditionExpression: 'attribute_exists(word)',
+            ExpressionAttributeNames: {
+                '#v': 'tweetIds'
+            },
+            ExpressionAttributeValues: {
+                ':v': docClient.createSet([event.value.tweetId])
+            },
+            ReturnValues: 'ALL_NEW'
+        };
+
+        let result = await docClient.update(params, (err, data) => {
+            if (err) {
+                console.error("Unable to add tweet to hashtag list. Error JSON:", JSON.stringify(err));
+                let resp:ErrorResponse = null;
+                if (err.code = 'ConditionalCheckFailedException') {
+                    resp = new ErrorResponse('Not exists error. That hashtag does not exist', err.statusCode);
+                }
+                else {
+                    resp = new ErrorResponse('Unable to add tweet to hashtag list', 400);
+                }
+                context.fail(JSON.stringify(resp));
+            } else {
+                console.log("Got item:", JSON.stringify(data));
             }
-        }
-        else if (event.word == tag2) {
-            var index = h.tweetIds.indexOf(event.value.tweetId);
-            if (index === -1) {
-                h.tweetIds.push(event.value.tweetId);
+        }).promise();
+
+        let data = result.Attributes;
+        h = new Hashtag(event.word, data['tweetIds']);
+    }
+    else if (HashtagUpdateAction.Remove) {
+        let params:DynamoDB.DocumentClient.UpdateItemInput = {
+            TableName: 'Hashtags',
+            Key: {
+                'word': event.word
+            },
+            UpdateExpression: 'DELETE #v :v',
+            ConditionExpression: 'attribute_exists(word)',
+            ExpressionAttributeNames: {
+                '#v': 'tweetIds'
+            },
+            ExpressionAttributeValues: {
+                ':v': docClient.createSet([event.value.tweetId])
+            },
+            ReturnValues: 'ALL_NEW'
+        };
+        
+        let result = await docClient.update(params, (err, data) => {
+            if (err) {
+                console.error("Unable to remove tweet from hashtag list. Error JSON:", JSON.stringify(err));
+                let resp:ErrorResponse = null;
+                if (err.code = 'ConditionalCheckFailedException') {
+                    resp = new ErrorResponse('Not exists error. That hashtag does not exist', err.statusCode);
+                }
+                else {
+                    resp = new ErrorResponse('Unable to remove tweet from hashtag list', 400);
+                }
+                context.fail(JSON.stringify(resp));
+            } else {
+                console.log("Got item:", JSON.stringify(data));
             }
-        }
+        }).promise();
+
+        let data = result.Attributes;
+        h = new Hashtag(event.word, data['tweetIds']);
     }
     else {
-        if (event.word == tag1) {
-            var index = h.tweetIds.indexOf(event.value.tweetId);
-            if (index !== -1) {
-                h.tweetIds.splice(index, 1);
-            }
-        }
-        else if (event.word == tag2) {
-            var index = h.tweetIds.indexOf(event.value.tweetId);
-            if (index !== -1) {
-                h.tweetIds.splice(index, 1);
-            }
-        }
+        console.error(`Unsupported update action: ${event.action}`);
+        let errResp = new ErrorResponse(`Unsupported update action: ${event.action}`, 400);
+        context.fail(JSON.stringify(errResp));
     }
 
     console.log('Leaving hashtag-update');

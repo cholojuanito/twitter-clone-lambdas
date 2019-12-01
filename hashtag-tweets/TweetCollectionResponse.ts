@@ -3,18 +3,18 @@ import Tweet from "./Tweet";
 class TweetCollectionResponse {
     public data:Tweet[];
     public numResults:number;
-    public lastKey:string;
+    public lastKey:Object;
     public pageSize:number;
 
-    constructor(data:Tweet[], pageSize:number) {
+    constructor(data:Tweet[], pageSize:number, lastKey:Object) {
         this.data = data;
         this.pageSize = pageSize;
         this.numResults = data.length;
-        if (data.length > 0) {
-            this.lastKey = data[data.length - 1].id;
+        if (lastKey == null || lastKey == undefined) {
+            this.lastKey = null;
         }
         else {
-            this.lastKey = null; 
+            this.lastKey = lastKey;
         }
     }
 }

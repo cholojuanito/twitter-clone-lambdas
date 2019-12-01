@@ -16,9 +16,7 @@ export const handler = async (event: TweetCollectionFeedStoryGetRequest, context
     // Get people they are following
     // Get followers' tweets
     let t:Tweet[] = [];
-
     let docClient = new DynamoDB.DocumentClient();
-    
     let feedParams:DynamoDB.DocumentClient.QueryInput = {
         TableName: 'Feeds',
         KeyConditionExpression: '#uid = :uid AND #c <= :c',
@@ -88,7 +86,7 @@ export const handler = async (event: TweetCollectionFeedStoryGetRequest, context
         }
     }
     else {
-        console.error("Unable to get user story");
+        console.error("Unable to get user feed");
         // ? Error response?
     }
 
