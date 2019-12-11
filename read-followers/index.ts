@@ -4,9 +4,10 @@ import { ErrorResponse } from './ErrorResponse';
 import { QueueService } from './QueueService';
 import { FollowsDAODynamo } from './FollowsDAODynamo';
 import { FollowsDAO } from 'FollowsDAO';
+import { QueueServiceAWS } from 'QueueServiceAWS';
 
 export const handler = async (event: SQSEvent, context:Context) => {
-let qService:QueueService = new QueueService();
+let qService:QueueService = new QueueServiceAWS();
 let followsDAO:FollowsDAO = new FollowsDAODynamo();
     try {
         for (var msg of event.Records) {
