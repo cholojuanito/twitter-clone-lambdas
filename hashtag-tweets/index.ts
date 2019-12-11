@@ -31,7 +31,12 @@ export const handler = async (event: TweetCollectionByHashtagGetRequest, context
     };
 
     if (event.lastKey != null && event.lastKey !== '') {
-        hashtagParams.ExclusiveStartKey = event.lastKey;
+        let parts = event.lastKey.split(':');
+        let lastKey = {
+            'word': parts[0],
+            'created': parseInt(parts[1])
+        };
+        hashtagParams.ExclusiveStartKey = lastKey;
     }
 
     let hashtagResult = await docClient.query(hashtagParams, (err, data) => {
@@ -77,10 +82,11 @@ export const handler = async (event: TweetCollectionByHashtagGetRequest, context
     if (tweets != null) {
         for (let idx = 0; idx < tweets.length; idx++) {
             let data = tweets[idx];
+            let media:Media = data.media != null ? new Media(data.media, data.mediaType) : null;
             let hashtags:Hashtag[] = data.hashtags.map((word:string) => new Hashtag(word, [data.id]));
             let mentions:Mention[] = data.mentions.map((word:string) => new Mention(word, word));
             let urls:ExternalURL[] = data.urls.map((word:string) => new ExternalURL(word));
-            t.push(new Tweet(data.id, data.authorId, data.message, new Media(data.media, data.mediaType), hashtags, mentions, urls, data.created));
+            t.push(new Tweet(data.id, data.authorId, data.message, media, hashtags, mentions, urls, data.created));
         }
     }
     else {

@@ -29,7 +29,12 @@ export const handler = async (event: TweetCollectionFeedStoryGetRequest, context
     };
 
     if (event.lastKey != null && event.lastKey !== '') {
-        params.ExclusiveStartKey = event.lastKey;
+        let parts = event.lastKey.split(':');
+        let lastKey = {
+            'authorId': parts[0],
+            'created': parseInt(parts[1])
+        };
+        params.ExclusiveStartKey = lastKey;
     }
 
     let result = await docClient.query(params, (err, data) => {
@@ -46,10 +51,11 @@ export const handler = async (event: TweetCollectionFeedStoryGetRequest, context
     if (result.Count > 0) {
         for (let idx = 0; idx < result.Items.length; idx++) {
             let data = result.Items[idx];
+            let media:Media = data.media != null ? new Media(data.media, data.mediaType) : null;
             let hashtags:Hashtag[] = data.hashtags.map((word:string) => new Hashtag(word, [data.id]));
             let mentions:Mention[] = data.mentions.map((word:string) => new Mention(word, word));
             let urls:ExternalURL[] = data.urls.map((word:string) => new ExternalURL(word));
-            t.push(new Tweet(data.id, data.authorId, data.message, new Media(data.media, data.mediaType), hashtags, mentions, urls, data.created));
+            t.push(new Tweet(data.id, data.authorId, data.message, media, hashtags, mentions, urls, data.created));
         }
     }
     else {

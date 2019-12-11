@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "aws-sdk": "^2.538.0",
+        "chunk": "0.0.2",
         "uuid": "^3.3.3"
     }
 }

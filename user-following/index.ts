@@ -27,7 +27,12 @@ export const handler = async (event: UserCollectionFollowingGetRequest, context:
     };
 
     if (event.lastKey != null && event.lastKey !== '') {
-        followParams.ExclusiveStartKey = event.lastKey;
+        let parts = event.lastKey.split(':');
+        let lastKey = {
+            'followerId': parts[0],
+            'followeeId': parts[1]
+        };
+        followParams.ExclusiveStartKey = lastKey;
     }
 
     let followResults = await docClient.query(followParams, (err, data) => {
