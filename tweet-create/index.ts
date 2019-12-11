@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { DynamoDB } from 'aws-sdk';
+import { DynamoDB, SQS } from 'aws-sdk';
 import { Context, Callback } from 'aws-lambda'
 import TweetCreateRequest from "./TweetCreateRequest";
 import TweetResponse from "./TweetResponse";
@@ -38,21 +38,7 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
         },     
     };
 
-    let feedParams:DynamoDB.DocumentClient.PutItemInput = {
-        TableName: 'Feeds',
-        Item: {
-            userId: '0miJZZ9DdhQWOnRguB4MCvfe0KV2', // TODO this needs to be changed
-            created: timestamp,
-            tweetKey: {
-                'authorId': event.authorId,
-                'created': timestamp
-            }
-        }       
-    };
-
-    let hashtagParams:DynamoDB.DocumentClient.PutItemInput = null;
-
-    // TODO set up queues and params for hashtags as well
+    let readFollowersQueueURL = 'https://sqs.us-west-1.amazonaws.com/051836640884/read-followers';
 
     let result = await docClient.put(tweetParams, (err, data) => {
         if (err) {
@@ -70,18 +56,28 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
         }
     }).promise();
 
-    // Add to the Feed table
-    // TODO put in a queue for processing
-    let feedResult = await docClient.put(feedParams, (err, data) => {
+    // Send to queue to be added to all other follower's feeds
+    let sqs = new SQS({ apiVersion: "2012-11-05", region: "us-west-1" });
+    let queueParams:SQS.SendMessageRequest = {
+            MessageBody: `${event.authorId}:${timestamp}`,
+            QueueUrl: readFollowersQueueURL,
+            DelaySeconds: 2
+    };
+    sqs.sendMessage(queueParams, (err: AWS.AWSError, data: SQS.Types.SendMessageResult) => {
         if (err) {
-            console.error("Unable to add item. Error JSON:", JSON.stringify(err));
-            let resp = new ErrorResponse(err.message, err.statusCode);
-            context.fail(JSON.stringify(resp));
-        } else {
-            console.log("Added tweet to feed");
+            console.log("Error sending to read-followers queue", err);
         }
-    }).promise();
+    
+        else {
+            console.log("Success", data.MessageId);
+        }
+    
+    });
+    
 
+    let hashtagParams:DynamoDB.DocumentClient.PutItemInput = null;
+    // ?set up queues and params for hashtags as well
+    // Add hashtags to hashtag table    
     for (let idx = 0; idx < hashtags.length; idx++) {
         const element = hashtags[idx];
         hashtagParams = {
@@ -107,7 +103,7 @@ export const handler = async (event: TweetCreateRequest, context:Context): Promi
         }).promise();
     }
 
-    let t:Tweet = new Tweet(id, event.authorId, event.message, event.media, event.hashtags, event.mentions, event.urls, timestamp.toString());
+    let t:Tweet = new Tweet(id, event.authorId, event.message, event.media, event.hashtags, event.mentions, event.urls, timestamp);
 
     console.log('Leaving tweet-create');
 

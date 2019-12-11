@@ -11,9 +11,9 @@ class Tweet {
     public hashtags:Hashtag[];
     public mentions:Mention[];
     public urls:ExternalURL[];
-    public created:string;
+    public created:number;
 
-    constructor(id:string, authorId:string, message:string, media:Media, hashtags:Hashtag[], mentions:Mention[], urls:ExternalURL[], created:string) {
+    constructor(id:string, authorId:string, message:string, media:Media, hashtags:Hashtag[], mentions:Mention[], urls:ExternalURL[], created:number) {
         this.id = id;
         this.authorId = authorId;
         this.message = message;
