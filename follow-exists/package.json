@@ -1,0 +1,24 @@
+{
+    "name": "twitter-clone-authorizer-lambda",
+    "version": "0.0.1",
+    "description": "An authorizer lambda for the Twitter clone API",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "node",
+        "typescript"
+    ],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.36",
+        "@types/node": "^11.13.8"
+    },
+    "dependencies": {
+        "@types/uuid": "^3.4.6",
+        "aws-sdk": "^2.538.0",
+        "uuid": "^3.3.3"
+    }
+}

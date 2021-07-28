@@ -1,0 +1,22 @@
+{
+    "name": "twitter-clone-media-uploader-lambda",
+    "version": "0.0.1",
+    "description": "Media uploader lambda for the Twitter clone API",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "node",
+        "typescript"
+    ],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.36",
+        "@types/node": "^11.13.8"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.538.0"
+    }
+}
